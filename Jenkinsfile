@@ -16,7 +16,10 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git'
+                // Ensure that you are using correct credentials for accessing the Git repository
+                git branch: 'main', 
+                    url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git', 
+                    credentialsId: 'your-credentials-id'
             }
         }
 
@@ -106,6 +109,7 @@ pipeline {
                 def buildNumber = env.BUILD_NUMBER
                 def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
                 def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
+                def buildUrl = env.BUILD_URL ?: 'N/A'
 
                 def body = """
                     <html>
@@ -115,7 +119,7 @@ pipeline {
                     <div style="background-color: ${bannerColor}; padding: 10px;">
                     <h3 style="color: white;">Pipeline Status: ${pipelineStatus.toUpperCase()}</h3>
                     </div>
-                    <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
+                    <p>Check the <a href="${buildUrl}">console output</a>.</p>
                     </div>
                     </body>
                     </html>
@@ -124,7 +128,7 @@ pipeline {
                 emailext (
                     subject: "${jobName} - Build ${buildNumber} - ${pipelineStatus.toUpperCase()}",
                     body: body,
-                    to: 'shilpapreema@gmail.com.com',
+                    to: 'shilpapreema@gmail.com',
                     from: 'pshilpadsouza@gmail.com',
                     replyTo: 'shilpapreema@gmail.com',
                     mimeType: 'text/html',
