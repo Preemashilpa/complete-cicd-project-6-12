@@ -16,10 +16,9 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                // Ensure that you are using correct credentials for accessing the Git repository
                 git branch: 'main', 
                     url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git', 
-                    credentialsId: 'your-credentials-id'
+                    credentialsId: 'your-git-credentials-id' // Ensure correct credentials
             }
         }
 
