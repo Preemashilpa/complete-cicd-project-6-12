@@ -66,28 +66,34 @@ pipeline {
             }
         }
         
-        stage('Updating the Cluster') {
+        stage('Update Kubernetes Cluster Config') {
             steps {
-                script {
-                    sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    script {
+                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
+                    }
                 }
             }
         }
         
         stage('Deploy To Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
-                    sh "kubectl get pods -n microdegree"
-                    sh "kubectl apply -f deployment.yml -n microdegree"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
+                        sh "kubectl get pods -n microdegree"
+                        sh "kubectl apply -f deployment.yml -n microdegree"
+                    }
                 }
             }
         }
 
         stage('Verify the Deployment') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
-                    sh "kubectl get pods -n microdegree"
-                    sh "kubectl get svc -n microdegree"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
+                        sh "kubectl get pods -n microdegree"
+                        sh "kubectl get svc -n microdegree"
+                    }
                 }
             }
         }
