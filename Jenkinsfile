@@ -16,9 +16,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', 
-                    url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git', 
-                    credentialsId: 'your-git-credentials-id' // Ensure correct credentials
+                git branch: 'main', url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git'
             }
         }
 
@@ -68,34 +66,28 @@ pipeline {
             }
         }
         
-        stage('Update Kubernetes Cluster Config') {
+        stage('Updating the Cluster') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    script {
-                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
-                    }
+                script {
+                    sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
                 }
             }
         }
         
         stage('Deploy To Kubernetes') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
-                        sh "kubectl get pods -n microdegree"
-                        sh "kubectl apply -f deployment.yml -n microdegree"
-                    }
+                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
+                    sh "kubectl get pods -n microdegree"
+                    sh "kubectl apply -f deployment.yml -n microdegree"
                 }
             }
         }
 
         stage('Verify the Deployment') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                    withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
-                        sh "kubectl get pods -n microdegree"
-                        sh "kubectl get svc -n microdegree"
-                    }
+                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://ADC581BCB24B6DB1150A0486A3472BE1.gr7.us-east-1.eks.amazonaws.com') {
+                    sh "kubectl get pods -n microdegree"
+                    sh "kubectl get svc -n microdegree"
                 }
             }
         }
@@ -108,7 +100,6 @@ pipeline {
                 def buildNumber = env.BUILD_NUMBER
                 def pipelineStatus = currentBuild.result ?: 'UNKNOWN'
                 def bannerColor = pipelineStatus.toUpperCase() == 'SUCCESS' ? 'green' : 'red'
-                def buildUrl = env.BUILD_URL ?: 'N/A'
 
                 def body = """
                     <html>
@@ -118,7 +109,7 @@ pipeline {
                     <div style="background-color: ${bannerColor}; padding: 10px;">
                     <h3 style="color: white;">Pipeline Status: ${pipelineStatus.toUpperCase()}</h3>
                     </div>
-                    <p>Check the <a href="${buildUrl}">console output</a>.</p>
+                    <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
                     </div>
                     </body>
                     </html>
@@ -129,7 +120,7 @@ pipeline {
                     body: body,
                     to: 'shilpapreema@gmail.com',
                     from: 'pshilpadsouza@gmail.com',
-                    replyTo: 'shilpapreema@gmail.com',
+                    replyTo:'shilpapreema@gmail.com',
                     mimeType: 'text/html',
                     attachmentsPattern: 'trivy-image-report.html'
                 )
