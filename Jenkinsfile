@@ -6,6 +6,8 @@ pipeline {
         IMAGE_NAME = "preema21/fullstack"
         AWS_REGION = "ap-south-1"
         CLUSTER_NAME = "microdegree-cluster"
+         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
 
     tools {
