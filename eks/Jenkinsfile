@@ -4,7 +4,7 @@ pipeline {
     } 
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY') 
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
 
     agent any
@@ -14,7 +14,6 @@ pipeline {
                 script {
                     dir("terraform") {
                         git branch: 'infra', url: 'https://github.com/Preemashilpa/complete-cicd-project-6-12.git'
-
                     }
                 }
             }
@@ -22,9 +21,12 @@ pipeline {
 
         stage('Plan') {
             steps {
-                sh 'pwd;cd eks/ ; terraform init'
-                sh "pwd;cd eks/ ; terraform plan -out tfplan"
-                sh 'pwd;cd eks/ ; terraform show -no-color tfplan > tfplan.txt'
+                script {
+                    // Ensure the Terraform initialization is done properly
+                    sh 'pwd; cd eks/; terraform init -input=false || exit 1'
+                    sh 'pwd; cd eks/; terraform plan -out=tfplan || exit 1'
+                    sh 'pwd; cd eks/; terraform show -no-color tfplan > tfplan.txt'
+                }
             }
         }
 
@@ -47,16 +49,12 @@ pipeline {
             steps {
                 script {
                     if (params.terraformAction == 'apply') {
-                        sh "pwd;cd eks/ ; terraform apply -input=false tfplan"
+                        sh "pwd; cd eks/; terraform apply -input=false tfplan || exit 1"
                     } else if (params.terraformAction == 'destroy') {
-                        sh "pwd;cd eks/ ; terraform destroy -auto-approve"
+                        sh "pwd; cd eks/; terraform destroy -auto-approve || exit 1"
                     }
                 }
             }
         }
     }
 }
-
-
-
-
