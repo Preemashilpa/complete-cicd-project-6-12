@@ -3,13 +3,12 @@ pipeline {
         choice(name: 'terraformAction', choices: ['apply', 'destroy'], description: 'Choose the Terraform action to perform')
     } 
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION = 'ap-south-1'  // Specify the AWS region you're using, adjust as needed
     }
 
     agent any
     stages {
-        stage('checkout') {
+        stage('Checkout') {
             steps {
                 script {
                     dir("terraform") {
@@ -22,10 +21,16 @@ pipeline {
         stage('Plan') {
             steps {
                 script {
-                    // Ensure the Terraform initialization is done properly
-                    sh 'pwd; cd eks/; terraform init -input=false || exit 1'
-                    sh 'pwd; cd eks/; terraform plan -out=tfplan || exit 1'
-                    sh 'pwd; cd eks/; terraform show -no-color tfplan > tfplan.txt'
+                    // Make sure AWS credentials are set before executing terraform commands
+                    withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        // Ensure the Terraform initialization is done properly
+                        sh 'pwd; cd eks/; terraform init -input=false || exit 1'
+
+                        // Run terraform plan and capture the output to a file
+                        sh 'pwd; cd eks/; terraform plan -out=tfplan || exit 1'
+                        sh 'pwd; cd eks/; terraform show -no-color tfplan > tfplan.txt'
+                    }
                 }
             }
         }
@@ -48,10 +53,13 @@ pipeline {
             }
             steps {
                 script {
-                    if (params.terraformAction == 'apply') {
-                        sh "pwd; cd eks/; terraform apply -input=false tfplan || exit 1"
-                    } else if (params.terraformAction == 'destroy') {
-                        sh "pwd; cd eks/; terraform destroy -auto-approve || exit 1"
+                    withCredentials([string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        if (params.terraformAction == 'apply') {
+                            sh "pwd; cd eks/; terraform apply -input=false tfplan || exit 1"
+                        } else if (params.terraformAction == 'destroy') {
+                            sh "pwd; cd eks/; terraform destroy -auto-approve || exit 1"
+                        }
                     }
                 }
             }
