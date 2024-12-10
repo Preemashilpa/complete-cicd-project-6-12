@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME = "preema21/fullstack"
         AWS_REGION = "ap-south-1"
         CLUSTER_NAME = "microdegree-cluster"
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
 
@@ -42,6 +42,14 @@ pipeline {
             }
         }
 
+        stage('Docker Image Scan') {
+            steps {
+                script {
+                    sh "trivy image --format table -o trivy-image-report.html ${IMAGE_NAME}:${DOCKER_TAG}"
+                }
+            }
+        }
+
         stage('Login to Docker Hub') {
             steps {
                 script {
@@ -59,7 +67,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Updating the Cluster') {
             steps {
                 script {
@@ -67,10 +75,11 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Deploy To Kubernetes') {
             steps {
                 withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
+            
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl apply -f deployment.yml -n microdegree"
                 }
@@ -80,10 +89,10 @@ pipeline {
         stage('Verify the Deployment') {
             steps {
                 withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
+    
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl get svc -n microdegree"
                 }
             }
         }
     }
-}
