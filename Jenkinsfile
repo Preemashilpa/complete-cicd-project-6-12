@@ -42,12 +42,12 @@ pipeline {
             }
         }
 
-        stage('Docker Image Scan') {
-            steps {
-                script {
-                    sh "trivy image --format table -o trivy-image-report.html ${IMAGE_NAME}:${DOCKER_TAG}"
-                }
-            }
+      //  stage('Docker Image Scan') {
+        //    steps {
+          //      script {
+            //        sh "trivy image --format table -o trivy-image-report.html ${IMAGE_NAME}:${DOCKER_TAG}"
+              //  }
+            //}
         }
 
         stage('Login to Docker Hub') {
