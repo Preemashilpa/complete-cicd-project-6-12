@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_TAG = "20241003"
+        // Make the Docker tag dynamic, using the build ID or Git commit hash
+        DOCKER_TAG = "${env.BUILD_ID}"
         IMAGE_NAME = "preema21/fullstack"
         AWS_REGION = "ap-south-1"
         CLUSTER_NAME = "microdegree-cluster"
@@ -22,27 +23,23 @@ pipeline {
             }
         }
 
-        stage('Compile') {
+        stage('Compile & Build') {
             steps {
-                sh "mvn compile"
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh "mvn package"
+                // Clean, compile, and package the application
+                sh "mvn clean package"
             }
         }
 
         stage('Build & Tag Docker Image') {
             steps {
                 script {
+                    // Build and tag Docker image with the dynamic DOCKER_TAG
                     sh "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
                 }
             }
         }
 
-        // Comment out the Docker Image Scan stage
+        // Commented out the Docker Image Scan stage as requested
         // stage('Docker Image Scan') {
         //     steps {
         //         script {
@@ -55,6 +52,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Log in to Docker Hub with the credentials
                         sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
                     }
                 }
@@ -64,14 +62,16 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push the Docker image to Docker Hub
                     sh "docker push ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
 
-        stage('Updating the Cluster') {
+        stage('Update the Cluster') {
             steps {
-                script {
+                withAWS(credentials: 'AWS_CREDENTIALS') {
+                    // Update the kubeconfig for the cluster dynamically
                     sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}"
                 }
             }
@@ -79,8 +79,8 @@ pipeline {
 
         stage('Deploy To Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
-            
+                withKubeConfig(credentialsId: 'kube', namespace: 'microdegree') {
+                    // Deploy the application to Kubernetes
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl apply -f deployment.yml -n microdegree"
                 }
@@ -89,8 +89,8 @@ pipeline {
 
         stage('Verify the Deployment') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
-    
+                withKubeConfig(credentialsId: 'kube', namespace: 'microdegree') {
+                    // Verify the deployed pods and services
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl get svc -n microdegree"
                 }
