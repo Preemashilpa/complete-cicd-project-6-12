@@ -78,7 +78,8 @@ pipeline {
         
         stage('Deploy To Kubernetes') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
+                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5CD29CA9CA4C17DAFD2E6871337EEC57.gr7.ap-south-1.eks.amazonaws.com') {
+
             
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl apply -f deployment.yml -n microdegree"
@@ -88,7 +89,7 @@ pipeline {
 
         stage('Verify the Deployment') {
             steps {
-                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5D5B46935ECEAD30F0E756A74205B668.gr7.ap-south-1.eks.amazonaws.com') {
+                withKubeConfig(caCertificate: '', clusterName: 'microdegree-cluster', contextName: '', credentialsId: 'kube', namespace: 'microdegree', restrictKubeConfigAccess: false, serverUrl: 'https://5CD29CA9CA4C17DAFD2E6871337EEC57.gr7.ap-south-1.eks.amazonaws.com') {
     
                     sh "kubectl get pods -n microdegree"
                     sh "kubectl get svc -n microdegree"
