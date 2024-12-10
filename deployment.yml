@@ -2,19 +2,52 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fullstack-deployment
-  namespace: microdegree  # Make sure the namespace is set to microdegree
 spec:
-  replicas: 2
   selector:
     matchLabels:
-      app: fullstack-app
+      app: fullstack
+  replicas: 3
   template:
     metadata:
       labels:
-        app: fullstack-app
+        app: fullstack
     spec:
       containers:
-        - name: fullstack-container
-          image: preema21/fullstack:20241003  # Make sure the image is correct
-          ports:
-            - containerPort: 8080
+      - name: fullstack
+        image: preema21/fullstack:20241003
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        # Adding health checks (customize the path and port as needed)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fullstack-service  # Updated name for clarity
+spec:
+  selector:
+    app: fullstack
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
